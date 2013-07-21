@@ -53,5 +53,63 @@ All macros names are ALL CAPS with a leading `_`; this means they are invalid *S
 This assumes that `y` is defined as a bounded variable, e.g.
 `real<lower=a, upper=b> y;`.
 
+## _KALMANF_SEQ
+
+Log-likelihood of a dynamic linear model calculated using Kalman
+filter using sequential processing of observations and not allowing
+for any missing values.
+
+This calculates the log-likelihood of
+$$
+y_t \sim N(F'_t \theta_t, V_t)
+\theta_t \sim N(G \theta_t, W_t)
+$$
+
+```
+_KALMANF_SEQ(r, n, y, F, G, V, W, m0, C0)
+```
+
+- `r`: `int` Number of observations.
+- `n`: `int` Number of latent states
+- `y`: `matrix` of data. Rows are variables, columns are observations.
+- `F`: `matrix` see equation
+- `G`: `matrix` see equation
+- `V`: `vector` the diagonal of $V_t$. See equation
+- `W`: `matrix` see equation
+
+If `F` (`G`, `V`, or `W`) is an array of matrices, use the following
+syntax `F[KALMANF_i]` where `F` is the name of variable.
+
 ## _KALMANF
+
+Log-likelihood of a dynamic linear model calculated using Kalman
+filter the Kalman filter and not allowing for any missing values.
+
+This calculates the log-likelihood of
+$$
+y_t \sim N(F'_t \theta_t, V_t)
+\theta_t \sim N(G \theta_t, W_t)
+$$
+
+```
+_KALMANF(r, n, y, F, G, V, W, m0, C0)
+```
+
+- `r`: `int` Number of observations.
+- `n`: `int` Number of latent states
+- `y`: `matrix` of data. Rows are variables, columns are observations.
+- `F`: `matrix` see equation
+- `G`: `matrix` see equation
+- `V`: `matrix` see equation
+- `W`: `matrix` see equation
+
+If `F` (`G`, `V`, or `W`) is an array of matrices, use the following
+syntax `F[KALMANF_i]` where `F` is the name of variable.
+
+## _LP
+
+`_LP(x)` is equivalent to
+```stan
+lp__ <- lp__ + x;
+```
 
