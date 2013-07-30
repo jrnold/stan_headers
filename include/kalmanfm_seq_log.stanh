@@ -1,0 +1,56 @@
+// Gaussian DLM values
+#ifndef STAN_HEADER_KALMANF
+#define STAN_HEADER_KALMANF
+
+#include <transpose.stanh>
+#include <make_symmetric.stanh>
+
+// sequential, no missing values
+#define _KALMANFM_SEQ_LOG(llik, r, n, y, F, G, V, W, m0, C0, mask) \
+  { \
+    vector[r] KALMANFM_SEQ_LL; \
+    vector[n] KALMANFM_SEQ_m; \
+    matrix[n, n] KALMANFM_SEQ_C; \
+    real KALMANFM_SEQ_f; \
+    real KALMANFM_SEQ_Q; \
+    real KALMANFM_SEQ_Q_inv; \
+    real KALMANFM_SEQ_e; \
+    vector[n] KALMANFM_SEQ_A; \
+    vector[n] KALMANFM_SEQ_Fj; \
+    KALMANFM_SEQ_m <- m0; \
+    KALMANFM_SEQ_C <- C0; \
+    llik <- 0.0; \
+    for (KALMANFM_SEQ_i in 1:cols(y)) { \
+      KALMANFM_SEQ_m <- G * KALMANFM_SEQ_m; \
+      KALMANFM_SEQ_C <- G * KALMANFM_SEQ_C * G _T + W; \
+      KALMANFM_SEQ_C <- _MAKE_SYMMETRIC(KALMANFM_SEQ_C);       \
+      for (KALMANFM_SEQ_j in 1:r) { \
+        if (int_step(mask[KALMANFM_SEQ_i, KALMANFM_SEQ_i])) { \
+           KALMANF_SEQ_LL[KALMANFM_SEQ_j] <- 0.0; \
+        } else { \
+           KALMANFM_SEQ_Fj <- col(F, KALMANFM_SEQ_j); \
+           KALMANFM_SEQ_f <- dot_product(KALMANFM_SEQ_Fj, KALMANFM_SEQ_m); \
+           KALMANFM_SEQ_Q <- KALMANFM_SEQ_Fj _T * KALMANFM_SEQ_C * KALMANFM_SEQ_Fj + V[KALMANFM_SEQ_j]; \
+           KALMANFM_SEQ_Q_inv <- 1.0 / KALMANFM_SEQ_Q; \
+           KALMANFM_SEQ_e <- y[KALMANFM_SEQ_j, KALMANFM_SEQ_i] - KALMANFM_SEQ_f; \
+           KALMANFM_SEQ_A <- KALMANFM_SEQ_C * KALMANFM_SEQ_Fj * KALMANFM_SEQ_Q_inv; \
+           KALMANFM_SEQ_m <- KALMANFM_SEQ_m + KALMANFM_SEQ_A * KALMANFM_SEQ_e; \
+           KALMANFM_SEQ_C <- KALMANFM_SEQ_C - KALMANFM_SEQ_Q * KALMANFM_SEQ_A * KALMANFM_SEQ_A _T; \
+           KALMANFM_SEQ_C <- _MAKE_SYMMETRIC(KALMANFM_SEQ_C); \
+           KALMANFM_SEQ_LL[KALMANFM_SEQ_j] <- (-0.5   \
+                    * (log(KALMANFM_SEQ_Q)  \
+                    + KALMANFM_SEQ_Q_inv * pow(KALMANFM_SEQ_e, 2))); \
+        } \
+      } \
+      llik <- llik + sum(KALMANFM_SEQ_LL); \
+    } \
+  }
+
+#define _KALMANFM_SEQ(r, n, y, F, G, V, W, m0, C0, mask) \
+  {
+    real KALMANFM_SEQ_llik; \
+    _KALMANFM_SEQ_LOG(KALMANFM_SEQ_llik, r, n, y, F, G, V, W, m0, C0, mask) \
+    lp__ <- lp__ + KALMANFM_SEQ_llik; \
+  }
+
+#endif

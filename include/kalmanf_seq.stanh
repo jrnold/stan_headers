@@ -1,0 +1,52 @@
+// Gaussian DLM values
+#ifndef STAN_HEADER_KALMANF_SEQ
+#define STAN_HEADER_KALMANF_SEQ
+
+#include <transpose.stanh>
+#include <make_symmetric.stanh>
+
+// sequential, no missing values
+#define _KALMANF_SEQ_LOG(llik, r, n, y, F, G, V, W, m0, C0) \
+  { \
+    vector[r] KALMANF_SEQ_LL; \
+    vector[n] KALMANF_SEQ_m; \
+    matrix[n, n] KALMANF_SEQ_C; \
+    real KALMANF_SEQ_f; \
+    real KALMANF_SEQ_Q; \
+    real KALMANF_SEQ_Q_inv; \
+    real KALMANF_SEQ_e; \
+    vector[n] KALMANF_SEQ_A; \
+    vector[n] KALMANF_SEQ_Fj; \
+    KALMANF_SEQ_m <- m0; \
+    KALMANF_SEQ_C <- C0; \
+    llik <- 0.0; \
+    for (KALMANF_SEQ_i in 1:cols(y)) { \
+      KALMANF_SEQ_m <- G * KALMANF_SEQ_m; \
+      KALMANF_SEQ_C <- G * KALMANF_SEQ_C * G _T + W; \
+      KALMANF_SEQ_C <- _MAKE_SYMMETRIC(KALMANF_SEQ_C);       \
+      for (KALMANF_SEQ_j in 1:r) { \
+        KALMANF_SEQ_Fj <- col(F, KALMANF_SEQ_j); \
+        KALMANF_SEQ_f <- dot_product(KALMANF_SEQ_Fj, KALMANF_SEQ_m); \
+        KALMANF_SEQ_Q <- KALMANF_SEQ_Fj _T * KALMANF_SEQ_C * KALMANF_SEQ_Fj + V[KALMANF_SEQ_j]; \
+        KALMANF_SEQ_Q_inv <- 1.0 / KALMANF_SEQ_Q; \
+        KALMANF_SEQ_e <- y[KALMANF_SEQ_j, KALMANF_SEQ_i] - KALMANF_SEQ_f; \
+        KALMANF_SEQ_A <- KALMANF_SEQ_C * KALMANF_SEQ_Fj * KALMANF_SEQ_Q_inv; \
+        KALMANF_SEQ_m <- KALMANF_SEQ_m + KALMANF_SEQ_A * KALMANF_SEQ_e; \
+        KALMANF_SEQ_C <- KALMANF_SEQ_C - KALMANF_SEQ_Q * KALMANF_SEQ_A * KALMANF_SEQ_A _T; \
+        KALMANF_SEQ_C <- _MAKE_SYMMETRIC(KALMANF_SEQ_C); \
+        KALMANF_SEQ_LL[KALMANF_SEQ_j] <- (-0.5   \
+                  * (log(KALMANF_SEQ_Q)  \
+                    + KALMANF_SEQ_Q_inv * pow(KALMANF_SEQ_e, 2))); \
+      } \
+      llik <- llik + sum(KALMANF_SEQ_LL); \
+    } \
+  }
+
+#define _KALMANF_SEQ(r, n, y, F, G, V, W, m0, C0) \
+  {
+    real KALMANF_SEQ_llik; \
+    _KALMANF_SEQ_LOG(KALMANF_SEQ_llik, r, n, y, F, G, V, W, m0, C0) \
+    lp__ <- lp__ + KALMANF_SEQ_llik; \
+  }
+
+#endif
