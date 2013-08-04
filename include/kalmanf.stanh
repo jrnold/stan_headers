@@ -14,7 +14,7 @@
     vector[r] KALMANF_f;  \
     matrix[r, r] KALMANF_Q;  \
     matrix[r, r] KALMANF_Q_inv;  \
-    vector[r] err;  \
+    vector[r] KALMANF_err;  \
     matrix[n, r] KALMANF_A;  \
     KALMANF_m <- m0;  \
     KALMANF_C <- C0;  \
@@ -26,15 +26,15 @@
       KALMANF_Q <- F _T * R * F + V; \
       KALMANF_Q <- _MAKE_SYMMETRIC(KALMANF_Q); \
       KALMANF_Q_inv <- inverse(KALMANF_Q); \
-      err <- col(y, KALMANF_i) - KALMANF_f; \
+      KALMANF_err <- col(y, KALMANF_i) - KALMANF_f; \
       KALMANF_A <- R * F * KALMANF_Q_inv; \
-      KALMANF_m <- a + KALMANF_A * err; \
+      KALMANF_m <- a + KALMANF_A * KALMANF_err; \
       KALMANF_C <- R - KALMANF_A * KALMANF_Q * KALMANF_A _T; \
       KALMANF_C <- _MAKE_SYMMETRIC(KALMANF_C); \
       KALMANF_LL <- (-0.5 \
              * (log_determinant(KALMANF_Q) \
                 + err _T * KALMANF_Q_inv * err)); \
-      llik <- llik + KALMANF_LL; \
+      llik[i] <- KALMANF_LL; \
     }  \
   }
 
@@ -42,7 +42,7 @@
   {
     real KALMANF_llik; \
     _KALMANF_LOG(KALMANF_llik, r, n, y, F, G, V, W, m0, C0) \
-    lp__ <- lp__ + KALMANF_llik; \
+    lp__ <- lp__ + sum(KALMANF_llik); \
   }
 
 #endif

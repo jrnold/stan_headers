@@ -19,7 +19,6 @@
     vector[n] KALMANFM_SEQ_Fj; \
     KALMANFM_SEQ_m <- m0; \
     KALMANFM_SEQ_C <- C0; \
-    llik <- 0.0; \
     for (KALMANFM_SEQ_i in 1:cols(y)) { \
       KALMANFM_SEQ_m <- G * KALMANFM_SEQ_m; \
       KALMANFM_SEQ_C <- G * KALMANFM_SEQ_C * G _T + W; \
@@ -42,7 +41,7 @@
                     + KALMANFM_SEQ_Q_inv * pow(KALMANFM_SEQ_e, 2))); \
         } \
       } \
-      llik <- llik + sum(KALMANFM_SEQ_LL); \
+      llik[i] <- sum(KALMANFM_SEQ_LL); \
     } \
   }
 
@@ -50,7 +49,7 @@
   {
     real KALMANFM_SEQ_llik; \
     _KALMANFM_SEQ_LOG(KALMANFM_SEQ_llik, r, n, y, F, G, V, W, m0, C0, mask) \
-    lp__ <- lp__ + KALMANFM_SEQ_llik; \
+    lp__ <- lp__ + sum(KALMANFM_SEQ_llik); \
   }
 
 #endif
