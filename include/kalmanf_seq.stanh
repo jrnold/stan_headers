@@ -45,7 +45,7 @@
 #define _KALMANF_SEQ(r, n, y, F, G, V, W, m0, C0) \
   {
     real KALMANF_SEQ_llik; \
-    _KALMANF_SEQ_LOG(KALMANF_SEQ_llik, r, n, y, F, G, V, W, m0, C0) \
+    _KALMANF_SEQ_LOG(KALMANF_SEQ_llik, r, n, y, F, G, V, W, m0, C0); \
     lp__ <- lp__ + KALMANF_SEQ_llik; \
   }
 
