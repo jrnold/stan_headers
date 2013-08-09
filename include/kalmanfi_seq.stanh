@@ -1,0 +1,53 @@
+// Gaussian DLM values
+// sequential. allows for intercept
+#ifndef STAN_HEADER_KALMANFI_SEQ
+#define STAN_HEADER_KALMANFI_SEQ
+
+#include <transpose.stanh>
+#include <make_symmetric.stanh>
+
+// sequential, no missing values
+#define _KALMANFI_SEQ_LOG(llik, r, n, y, F, G, V, W, m0, C0, x, z) \
+  { \
+    vector[r] KALMANFI_SEQ_LL; \
+    vector[n] KALMANFI_SEQ_m; \
+    matrix[n, n] KALMANFI_SEQ_C; \
+    real KALMANFI_SEQ_f; \
+    real KALMANFI_SEQ_Q; \
+    real KALMANFI_SEQ_Q_inv; \
+    real KALMANFI_SEQ_e; \
+    vector[n] KALMANFI_SEQ_A; \
+    vector[n] KALMANFI_SEQ_Fj; \
+    KALMANFI_SEQ_m <- m0; \
+    KALMANFI_SEQ_C <- C0; \
+    llik <- 0.0; \
+    for (KALMANFI_SEQ_i in 1:cols(y)) { \
+      KALMANFI_SEQ_m <- G * KALMANFI_SEQ_m + z; \
+      KALMANFI_SEQ_C <- G * KALMANFI_SEQ_C * G _T + W; \
+      KALMANFI_SEQ_C <- _MAKE_SYMMETRIC(KALMANFI_SEQ_C);       \
+      for (KALMANFI_SEQ_j in 1:r) { \
+        KALMANFI_SEQ_Fj <- col(F, KALMANFI_SEQ_j); \
+        KALMANFI_SEQ_f <- dot_product(KALMANFI_SEQ_Fj, KALMANFI_SEQ_m) + x[KALMAN_SEQ_Fj]; \
+        KALMANFI_SEQ_Q <- KALMANFI_SEQ_Fj _T * KALMANFI_SEQ_C * KALMANFI_SEQ_Fj + V[KALMANFI_SEQ_j]; \
+        KALMANFI_SEQ_Q_inv <- 1.0 / KALMANFI_SEQ_Q; \
+        KALMANFI_SEQ_e <- y[KALMANFI_SEQ_j, KALMANFI_SEQ_i] - KALMANFI_SEQ_f; \
+        KALMANFI_SEQ_A <- KALMANFI_SEQ_C * KALMANFI_SEQ_Fj * KALMANFI_SEQ_Q_inv; \
+        KALMANFI_SEQ_m <- KALMANFI_SEQ_m + KALMANFI_SEQ_A * KALMANFI_SEQ_e; \
+        KALMANFI_SEQ_C <- KALMANFI_SEQ_C - KALMANFI_SEQ_Q * KALMANFI_SEQ_A * KALMANFI_SEQ_A _T; \
+        KALMANFI_SEQ_C <- _MAKE_SYMMETRIC(KALMANFI_SEQ_C); \
+        KALMANFI_SEQ_LL[KALMANFI_SEQ_j] <- (-0.5   \
+                  * (log(KALMANFI_SEQ_Q)  \
+                    + KALMANFI_SEQ_Q_inv * pow(KALMANFI_SEQ_e, 2))); \
+      } \
+      llik <- llik + sum(KALMANFI_SEQ_LL); \
+    } \
+  }
+
+#define _KALMANFI_SEQ(r, n, y, F, G, V, W, m0, C0) \
+  {
+    real KALMANFI_SEQ_llik; \
+    _KALMANFI_SEQ_LOG(KALMANFI_SEQ_llik, r, n, y, F, G, V, W, m0, C0) \
+    lp__ <- lp__ + KALMANFI_SEQ_llik; \
+  }
+
+#endif

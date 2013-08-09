@@ -1,0 +1,48 @@
+// kalman filter, batch, intercepts
+#ifndef STAN_HEADER_KALMANFI
+#define STAN_HEADER_KALMANFI
+
+#include <transpose.stanh>
+#include <make_symmetric.stanh>
+
+#define _KALMANFI_LOG(llik, n, y, F, G, V, W, m0, C0, x, z) \
+    real KALMANFI_LL; \
+    vector[n] KALMANFI_m;  \
+    matrix[n, n] KALMANFI_C;  \
+    vector[n] a; \
+    matrix[n, n] R; \
+    vector[r] KALMANFI_f;  \
+    matrix[r, r] KALMANFI_Q;  \
+    matrix[r, r] KALMANFI_Q_inv;  \
+    vector[r] KALMANFI_err;  \
+    matrix[n, r] KALMANFI_A;  \
+    KALMANFI_m <- m0;  \
+    KALMANFI_C <- C0;  \
+    for (KALMANFI_i in 1:cols(y)) { \
+      KALMANFI_a <- G * KALMANFI_m + z;  \
+      KALMANFI_R <- G * KALMANFI_C * G _T + W; \
+      KALMANFI_R <- _MAKE_SYMMETRIC(KALMANFI_R); \
+      KALMANFI_f <- F _T * a + x; \
+      KALMANFI_Q <- F _T * R * F + V; \
+      KALMANFI_Q <- _MAKE_SYMMETRIC(KALMANFI_Q); \
+      KALMANFI_Q_inv <- inverse(KALMANFI_Q); \
+      KALMANFI_err <- col(y, KALMANFI_i) - KALMANFI_f; \
+      KALMANFI_A <- R * F * KALMANFI_Q_inv; \
+      KALMANFI_m <- a + KALMANFI_A * KALMANFI_err; \
+      KALMANFI_C <- R - KALMANFI_A * KALMANFI_Q * KALMANFI_A _T; \
+      KALMANFI_C <- _MAKE_SYMMETRIC(KALMANFI_C); \
+      KALMANFI_LL <- (-0.5 \
+             * (log_determinant(KALMANFI_Q) \
+                + err _T * KALMANFI_Q_inv * err)); \
+      llik[i] <- KALMANFI_LL; \
+    }  \
+  }
+
+#define _KALMANF(r, n, y, F, G, V, W, m0, C0) \
+  {
+    real KALMANFI_llik; \
+    _KALMANFI_LOG(KALMANFI_llik, r, n, y, F, G, V, W, m0, C0) \
+    lp__ <- lp__ + sum(KALMANFI_llik); \
+  }
+
+#endif
