@@ -1,0 +1,55 @@
+// Gaussian DLM values
+#ifndef STAN_HEADER_KALMANFMI_SEQ
+#define STAN_HEADER_KALMANFMI_SEQ
+
+#include <transpose.stanh>
+#include <make_symmetric.stanh>
+
+// sequential, no missing values
+#define _KALMANFMI_SEQ_LOG(llik, r, n, y, F, G, V, W, m0, C0, x, z, mask) \
+  { \
+    vector[r] KALMANFMI_SEQ_LL; \
+    vector[n] KALMANFMI_SEQ_m; \
+    matrix[n, n] KALMANFMI_SEQ_C; \
+    real KALMANFMI_SEQ_f; \
+    real KALMANFMI_SEQ_Q; \
+    real KALMANFMI_SEQ_Q_inv; \
+    real KALMANFMI_SEQ_e; \
+    vector[n] KALMANFMI_SEQ_A; \
+    vector[n] KALMANFMI_SEQ_Fj; \
+    KALMANFMI_SEQ_m <- m0; \
+    KALMANFMI_SEQ_C <- C0; \
+    for (KALMANFMI_SEQ_i in 1:cols(y)) { \
+      KALMANFMI_SEQ_m <- G * KALMANFMI_SEQ_m + z; \
+      KALMANFMI_SEQ_C <- G * KALMANFMI_SEQ_C * G _T + W; \
+      KALMANFMI_SEQ_C <- _MAKE_SYMMETRIC(KALMANFMI_SEQ_C);       \
+      for (KALMANFMI_SEQ_j in 1:r) { \
+        if (int_step(mask[KALMANFMI_SEQ_i, KALMANFMI_SEQ_i])) { \
+           KALMANF_SEQ_LL[KALMANFMI_SEQ_j] <- 0.0; \
+        } else { \
+           KALMANFMI_SEQ_Fj <- col(F, KALMANFMI_SEQ_j); \
+           KALMANFMI_SEQ_f <- dot_product(KALMANFMI_SEQ_Fj, KALMANFMI_SEQ_m) + x[KALMANFMI_SEQ_j]; \
+           KALMANFMI_SEQ_Q <- KALMANFMI_SEQ_Fj _T * KALMANFMI_SEQ_C * KALMANFMI_SEQ_Fj + V[KALMANFMI_SEQ_j]; \
+           KALMANFMI_SEQ_Q_inv <- 1.0 / KALMANFMI_SEQ_Q; \
+           KALMANFMI_SEQ_e <- y[KALMANFMI_SEQ_j, KALMANFMI_SEQ_i] - KALMANFMI_SEQ_f; \
+           KALMANFMI_SEQ_A <- KALMANFMI_SEQ_C * KALMANFMI_SEQ_Fj * KALMANFMI_SEQ_Q_inv; \
+           KALMANFMI_SEQ_m <- KALMANFMI_SEQ_m + KALMANFMI_SEQ_A * KALMANFMI_SEQ_e; \
+           KALMANFMI_SEQ_C <- KALMANFMI_SEQ_C - KALMANFMI_SEQ_Q * KALMANFMI_SEQ_A * KALMANFMI_SEQ_A _T; \
+           KALMANFMI_SEQ_C <- _MAKE_SYMMETRIC(KALMANFMI_SEQ_C); \
+           KALMANFMI_SEQ_LL[KALMANFMI_SEQ_j] <- (-0.5   \
+                    * (log(KALMANFMI_SEQ_Q)  \
+                    + KALMANFMI_SEQ_Q_inv * pow(KALMANFMI_SEQ_e, 2))); \
+        } \
+      } \
+      llik[i] <- sum(KALMANFMI_SEQ_LL); \
+    } \
+  }
+
+#define _KALMANFMI_SEQ(r, n, y, F, G, V, W, m0, C0, mask) \
+  {
+    real KALMANFMI_SEQ_llik; \
+    _KALMANFMI_SEQ_LOG(KALMANFMI_SEQ_llik, r, n, y, F, G, V, W, m0, C0, mask) \
+    lp__ <- lp__ + sum(KALMANFMI_SEQ_llik); \
+  }
+
+#endif
