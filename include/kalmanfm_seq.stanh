@@ -24,7 +24,7 @@
       KALMANFM_SEQ_C <- G * KALMANFM_SEQ_C * G _T + W; \
       KALMANFM_SEQ_C <- _MAKE_SYMMETRIC(KALMANFM_SEQ_C);       \
       for (KALMANFM_SEQ_j in 1:r) { \
-        if (int_step(mask[KALMANFM_SEQ_i, KALMANFM_SEQ_i])) { \
+        if (int_step(mask[KALMANFM_SEQ_i, KALMANFM_SEQ_j])) { \
            KALMANFM_SEQ_LL[KALMANFM_SEQ_j] <- 0.0; \
         } else { \
            KALMANFM_SEQ_Fj <- col(F, KALMANFM_SEQ_j); \
