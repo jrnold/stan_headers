@@ -41,7 +41,7 @@
                     + KALMANFM_SEQ_Q_inv * pow(KALMANFM_SEQ_e, 2))); \
         } \
       } \
-      llik[i] <- sum(KALMANFM_SEQ_LL); \
+      llik[KALMANFM_SEQ_i] <- sum(KALMANFM_SEQ_LL); \
     } \
   }
 
