@@ -41,13 +41,13 @@
                     + KALMANFMI_SEQ_Q_inv * pow(KALMANFMI_SEQ_e, 2))); \
         } \
       } \
-      llik[i] <- sum(KALMANFMI_SEQ_LL); \
+      llik[KALMANFMI_SEQ_i] <- sum(KALMANFMI_SEQ_LL); \
     } \
   }
 
 #define _KALMANFMI_SEQ(r, n, y, F, G, V, W, m0, C0, b, d, mask) \
   { \
-    real KALMANFMI_SEQ_llik; \
+    vector[cols(y)] KALMANFMI_SEQ_llik; \
     _KALMANFMI_SEQ_LOG(KALMANFMI_SEQ_llik, r, n, y, F, G, V, W, m0, C0, b, d, mask) \
     lp__ <- lp__ + sum(KALMANFMI_SEQ_llik); \
   }

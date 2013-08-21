@@ -47,7 +47,7 @@
 
 #define _KALMANFM_SEQ(r, n, y, F, G, V, W, m0, C0, mask) \
   { \
-    real KALMANFM_SEQ_llik; \
+    vector[cols(y)] KALMANFM_SEQ_llik; \
     _KALMANFM_SEQ_LOG(KALMANFM_SEQ_llik, r, n, y, F, G, V, W, m0, C0, mask) \
     lp__ <- lp__ + sum(KALMANFM_SEQ_llik); \
   }
